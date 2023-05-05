@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>基于session的会话管理演示</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 50px;
+        }
+
+        ul li {
+            cursor: pointer;
+            color: blue;
+        }
+    </style>
+</head>
+
+<body>
+    <div v-scope>
+        <h2>基于session的会话管理演示</h2>
+        <ul @click="togglePage">
+            <li id="home">首页</li>
+            <li id="login">登陆</li>
+            <li id="userinfo">获取用户信息</li>
+        </ul>
+
+        <p>当前位置：{{curPage}}</p>
+
+        <div v-if="curPage=='home'">
+            {{homeText}}
+        </div>
+
+        <div v-else-if="curPage=='login'">
+            <div>
+                <label for="username">用户名：</label>
+                <input type="text" name="username" required v-model="username">
+            </div>
+            <div>
+                <label for="password">密码：</label>
+                <input type="password" name="password" required v-model="pwd">
+            </div>
+            <button @click="handleLogin">
+                登陆
+            </button>
+        </div>
+
+        <div v-else>
+            {{userinfoText}}
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/petite-vue@0.2.2/dist/petite-vue.iife.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.1.2/dist/axios.min.js"></script>
+    <script type="module">
+        PetiteVue.createApp({
+            curPage: 'home',
+            homeText: undefined,
+            username: null,
+            pwd: null,
+            userinfoText: undefined,
+
+            togglePage(event) {
+                if (event.target.id) {
+                    this.curPage = event.target.id
+                    switch (this.curPage) {
+                        case 'home': this.fetchHome(); break;
+                        case 'login': break;
+                        case 'userinfo': this.fetchUserInfo(); break;
+                    }
+                }
+            },
+
+            fetchHome() {
+                axios.get('http://localhost:3000/home').then((res) => {
+                    this.homeText = res.data
+                }).catch(err => {
+                    console.error(err)
+                })
+            },
+
+            handleLogin() {
+                axios.post('http://localhost:3000/login', {
+                    username: this.username,
+                    password: this.pwd,
+                }).then((res) => {
+                    this.userinfoText = res.data
+                    this.curPage = 'userinfo'
+                    this.fetchUserInfo()
+                }).catch(err => {
+                    console.error(err)
+                })
+            },
+
+            fetchUserInfo() {
+                axios.get('http://localhost:3000/userinfo').then((res) => {
+                    this.userinfoText = res.data
+                }).catch(err => {
+                    console.error(err)
+                })
+            },
+        }).mount()
+    </script>
+</body>
+
+</html>
